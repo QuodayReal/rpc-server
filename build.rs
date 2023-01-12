@@ -19,6 +19,7 @@ fn auto_compile() -> MyResult {
             tonic_build::configure()
                 .build_server(true)
                 .build_client(true)
+                .out_dir("src/protos")
                 .compile(&[proto_file_path.to_str().unwrap()], &[&proto_path])?;
         }
     }

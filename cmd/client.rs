@@ -1,7 +1,4 @@
-pub mod quotes {
-    tonic::include_proto!("quotes");
-}
-use quotes::{
+use crate::quotes::{
     quotes_service_client::QuotesServiceClient,
     QuoteRequest, QuoteResponse
 };

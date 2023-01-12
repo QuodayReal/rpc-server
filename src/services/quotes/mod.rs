@@ -1,14 +1,10 @@
-pub mod proto {
-    tonic::include_proto!("quotes");
-}
-
 use std::str::FromStr;
 
-use mongodb::bson::oid::ObjectId;
-use proto::{
+use crate::protos::quotes::{
     quotes_service_server::QuotesService, AuthorRequest, FilterQuotesRequest, Quote as rQuote,
     QuoteAuthor, QuoteAuthorResponse, QuoteRequest, QuoteResponse, QuoteTranslation,
 };
+use mongodb::bson::oid::ObjectId;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug)]

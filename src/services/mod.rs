@@ -1,5 +1,5 @@
 pub mod quotes;
-use quotes::proto::quotes_service_server::QuotesServiceServer;
+use crate::protos::quotes::quotes_service_server::QuotesServiceServer;
 
 use self::quotes::InnerQuotesService;
 

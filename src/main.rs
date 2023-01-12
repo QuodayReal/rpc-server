@@ -1,4 +1,5 @@
 pub mod db;
+pub mod protos;
 pub mod services;
 
 use tonic::transport::Server;

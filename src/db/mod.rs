@@ -1,8 +1,9 @@
 pub mod models;
 
+use self::models::{Quote, QuoteAuthor};
 use futures::stream::TryStreamExt;
 use mongodb::bson::{doc, oid::ObjectId};
-use self::models::{Quote, QuoteAuthor};
+use mongodb::options::FindOptions;
 
 #[derive(Debug)]
 pub struct Database {
@@ -31,17 +32,16 @@ pub fn new(db: mongodb::Client) -> Result<Database, Box<dyn std::error::Error>> 
 }
 
 impl Database {
-    pub async fn get_quotes(
-        &self,
-        ids: Vec<ObjectId>,
-    ) -> Result<Vec<Quote>, mongodb::error::Error> {
-        let filter = doc! {
-            "_id": {
-                "$in": ids
-            }
-        };
+    pub async fn get_quotes(&self, limit: i32) -> Result<Vec<Quote>, mongodb::error::Error> {
+        let filter = doc! {};
 
-        let mut cursor = self.quotes.find(filter, None).await?;
+        let mut cursor = self
+            .quotes
+            .find(
+                filter,
+                Some(FindOptions::builder().limit(limit as i64).build()),
+            )
+            .await?;
         let mut quotes = Vec::new();
         while let Some(doc) = cursor.try_next().await? {
             quotes.push(doc);

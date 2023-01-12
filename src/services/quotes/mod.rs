@@ -24,7 +24,38 @@ impl QuotesService for InnerQuotesService {
         &self,
         request: Request<FilterQuotesRequest>,
     ) -> Result<Response<QuoteResponse>, Status> {
-        Err(Status::unimplemented("Not implemented"))
+        let quotes = self
+            .db
+            .get_quotes(request.into_inner().limit.max(10))
+            .await
+            .map_err(|_| Status::internal("Database error"))?;
+
+        let mut response = QuoteResponse::default();
+
+        for quote in quotes {
+            let author = self
+                .db
+                .get_author(quote.author)
+                .await
+                .map_err(|_| Status::internal("Database error"))?;
+
+            let quote = rQuote {
+                id: quote.id.to_hex(),
+                author: author.map(|author| QuoteAuthor {
+                    id: author.id.to_hex(),
+                    name: author.name,
+                }),
+                translations: quote
+                    .translations
+                    .into_iter()
+                    .map(|(language, text)| QuoteTranslation { language, text })
+                    .collect(),
+            };
+
+            response.quotes.push(quote);
+        }
+
+        Ok(Response::new(response))
     }
 
     async fn get_quote(

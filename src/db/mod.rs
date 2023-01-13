@@ -2,8 +2,9 @@ pub mod models;
 
 use self::models::{Quote, QuoteAuthor};
 use futures::stream::TryStreamExt;
+use mongodb::bson::Document;
 use mongodb::bson::{doc, oid::ObjectId};
-use mongodb::options::FindOptions;
+use mongodb::options::{AggregateOptions, FindOptions};
 
 #[derive(Debug)]
 pub struct Database {
@@ -32,41 +33,18 @@ pub fn new(db: mongodb::Client) -> Result<Database, Box<dyn std::error::Error>> 
 }
 
 impl Database {
-    pub async fn get_quotes(&self, limit: i32) -> Result<Vec<Quote>, mongodb::error::Error> {
-        let filter = doc! {};
-
-        let mut cursor = self
-            .quotes
-            .find(
-                filter,
-                Some(FindOptions::builder().limit(limit as i64).build()),
-            )
-            .await?;
-        let mut quotes = Vec::new();
-        while let Some(doc) = cursor.try_next().await? {
-            quotes.push(doc);
-        }
-
-        Ok(quotes)
-    }
-
-    pub async fn get_authors(
+    pub async fn aggregate_quotes(
         &self,
-        ids: Vec<ObjectId>,
-    ) -> Result<Vec<QuoteAuthor>, mongodb::error::Error> {
-        let filter = doc! {
-            "_id": {
-                "$in": ids
-            }
-        };
-
-        let mut cursor = self.authors.find(filter, None).await?;
-        let mut authors = Vec::new();
+        pipeline: impl IntoIterator<Item = Document>,
+        options: impl Into<Option<AggregateOptions>>,
+    ) -> Result<Vec<Document>, mongodb::error::Error> {
+        let mut cursor = self.quotes.aggregate(pipeline, options).await?;
+        let mut docs: Vec<_> = Vec::new();
         while let Some(doc) = cursor.try_next().await? {
-            authors.push(doc);
+            docs.push(doc);
         }
 
-        Ok(authors)
+        Ok(docs)
     }
 
     pub async fn get_quote(&self, id: ObjectId) -> Result<Option<Quote>, mongodb::error::Error> {
